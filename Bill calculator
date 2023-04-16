@@ -1,0 +1,338 @@
+#include "ThingSpeak.h"
+#include<PZEM004Tv30.h>
+#include <ESP8266WiFi.h>
+#include <SoftwareSerial.h>
+PZEM004Tv30 pzem(D5,D6); //------Tx-D5---Rx-D6---//
+//------- WI-FI details ----------//
+char ssid[] = "Unity";
+char pass[] = "123456789";
+//--------Thingspeak details -------// 
+unsigned long Channel_ID = 1675435; //Channel ID
+const char * myWriteAPIKey = "ID8Q2XXOXUU6DXM5"; 
+String value = "";
+//--------Variables---------//
+int count =0;
+float Apower;
+float Power1H;float AvgPower1H;float UPower1H;
+float Power2H;float AvgPower2H;float UPower2H;
+float Power3H;float AvgPower3H;float UPower3H;
+float Power4H;float AvgPower4H;float UPower4H;
+float Power5H;float AvgPower5H;float UPower5H;
+float Power6H;float AvgPower6H;float UPower6H;
+float Power7H;float AvgPower7H;float UPower7H;
+float Power8H;float AvgPower8H;float UPower8H;
+float Power9H;float AvgPower9H;float UPower9H;
+float Power10H;float AvgPower10H;float UPower10H;
+float Power11H;float AvgPower11H;float UPower11H;
+float Power12H;float AvgPower12H;float UPower12H;
+float Power13H;float AvgPower13H;float UPower13H;
+float Power14H;float AvgPower14H;float UPower14H;
+float Power15H;float AvgPower15H;float UPower15H;
+float Power16H;float AvgPower16H;float UPower16H;
+float Power17H;float AvgPower17H;float UPower17H;
+float Power18H;float AvgPower18H;float UPower18H;
+float Power19H;float AvgPower19H;float UPower19H;
+float Power20H;float AvgPower20H;float UPower20H;
+float Power21H;float AvgPower21H;float UPower21H;
+float Power22H;float AvgPower22H;float UPower22H;
+float Power23H;float AvgPower23H;float UPower23H;
+float Power24H;float AvgPower24H;float UPower24H;
+float TotalU;
+float Day1;float Day2;float Day3;float Day4;float Day5;float Day6;float Day7;float Day8;float Day9;float Day10;
+float Day11;float Day12;float Day13;float Day14;float Day15;float Day16;float Day17;float Day18;float Day19;float Day20;
+float Day21;float Day22;float Day23;float Day24;float Day25;float Day26;float Day27;float Day28;float Day29;float Day30;
+
+
+ double temp1,temp2,temp3,temp4,temp5;
+  float output,Final_output;
+  float input=TotalU;
+  double DC_CATA = 5.52;
+  double FC_CATA = 30;
+  double DC_CATB = 11.1;
+  double FC_CATB =  50;
+  double DC_CATC = 63.72;
+  double FC_CATC = 80;
+//----------------------------------------//
+WiFiClient  client;
+
+
+void internet()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      WiFi.begin(ssid, pass);
+      delay(5000);
+    }
+  }
+}
+
+void setup()
+{
+  
+  digitalWrite(LED_BUILTIN, LOW); 
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client);
+  internet();
+  digitalWrite(LED_BUILTIN, HIGH);
+}
+
+
+void loop()
+{  
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+  internet();     
+  float power = pzem.power();
+  if( !isnan(power) ){
+    count+=1;
+    Apower+=power;
+     Serial.print("Power: "); Serial.print(power); Serial.println("W");
+     ThingSpeak.writeField(Channel_ID,1,power,myWriteAPIKey);  
+    } else {
+        Serial.println("Error reading power");
+    }
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(58000);
+    if (count>=60){
+      HourReadings();
+    }
+  }
+
+void HourReadings()
+{
+  if( count==60){
+     Power1H=Apower;
+     AvgPower1H=Power1H/60;
+     UPower1H=AvgPower1H/1000;
+}
+  if( count==120){
+     Power2H=Apower-Power1H;
+     AvgPower2H=Power2H/60;
+     UPower2H=AvgPower2H/1000;
+}
+if( count==180){
+     Power3H=Apower-Power2H;
+     AvgPower3H=Power3H/60;
+     UPower3H=AvgPower3H/1000;
+}
+if( count==240){
+     Power4H=Apower-Power3H;
+     AvgPower4H=Power4H/60;
+     UPower4H=AvgPower4H/1000;
+}
+if( count==300){
+     Power5H=Apower-Power4H;
+     AvgPower5H=Power5H/60;
+     UPower5H=AvgPower5H/1000;
+}
+if( count==360){
+     Power6H=Apower-Power5H;
+     AvgPower6H=Power6H/60;
+     UPower6H=AvgPower6H/1000;
+}
+if( count==420){
+     Power7H=Apower-Power6H;
+     AvgPower7H=Power7H/60;
+     UPower7H=AvgPower7H/1000;
+}
+if( count==480){
+     Power8H=Apower-Power7H;
+     AvgPower8H=Power8H/60;
+     UPower8H=AvgPower8H/1000;
+}
+if( count==540){
+     Power9H=Apower-Power8H;
+     AvgPower9H=Power9H/60;
+     UPower9H=AvgPower9H/1000;
+}
+if( count==600){
+     Power10H=Apower-Power9H;
+     AvgPower10H=Power10H/60;
+     UPower10H=AvgPower10H/1000;
+}
+if( count==660){
+     Power11H=Apower-Power10H;
+     AvgPower11H=Power11H/60;
+     UPower11H=AvgPower11H/1000;
+}
+if( count==720){
+     Power12H=Apower-Power11H;
+     AvgPower12H=Power12H/60;
+     UPower12H=AvgPower12H/1000;
+}
+if( count==780){
+     Power13H=Apower-Power12H;
+     AvgPower13H=Power13H/60;
+     UPower13H=AvgPower13H/1000;
+}
+if( count==840){
+     Power14H=Apower-Power13H;
+     AvgPower14H=Power14H/60;
+     UPower14H=AvgPower14H/1000;
+}
+if( count==900){
+     Power15H=Apower-Power14H;
+     AvgPower15H=Power15H/60;
+     UPower15H=AvgPower15H/1000;
+}
+if( count==960){
+     Power16H=Apower-Power15H;
+     AvgPower16H=Power16H/60;
+     UPower16H=AvgPower16H/1000;
+}
+if( count==1020){
+     Power17H=Apower-Power16H;
+     AvgPower17H=Power17H/60;
+     UPower17H=AvgPower17H/1000;
+}
+if( count==1080){
+     Power18H=Apower-Power17H;
+     AvgPower18H=Power18H/60;
+     UPower18H=AvgPower18H/1000;
+}
+if( count==1140){
+     Power19H=Apower-Power18H;
+     AvgPower19H=Power19H/60;
+     UPower19H=AvgPower19H/1000;
+}
+if( count==1200){
+     Power20H=Apower-Power19H;
+     AvgPower20H=Power20H/60;
+     UPower20H=AvgPower20H/1000;
+}
+if( count==1260){
+     Power21H=Apower-Power20H;
+     AvgPower21H=Power21H/60;
+     UPower21H=AvgPower21H/1000;
+}
+if( count==1320){
+    Power22H=Apower-Power21H;
+    AvgPower22H=Power22H/60;
+    UPower22H=AvgPower22H/1000;
+}
+if( count==1380){
+     Power23H=Apower-Power22H;
+     AvgPower23H=Power23H/60;
+     UPower23H=AvgPower23H/1000;
+}
+if( count==1440){
+    Power24H=Apower-Power23H;
+    AvgPower24H=Power24H/60;
+    UPower24H=AvgPower24H/1000;
+}
+   TotalU=UPower1H+UPower3H+UPower4H+UPower5H+UPower6H+UPower7H+UPower8H+UPower9H+UPower10H+UPower11H+UPower12H+UPower13H+UPower14H+UPower15H+UPower16H+UPower17H+UPower18H+UPower19H+UPower20H+UPower21H+UPower22H+UPower23H+UPower24H;
+   if (count==1440||count==2880||count==4320||count==5760||count==7200||count==8640||count==10080||count==11520||count==12960||count==14400||count==15840||count==17280||count==18720||count==20160||count==21600||count==23040||count==24480||count==25920||count==27360||count==28800||count==30240||count==31680||count==33120||count==34560||count==36000||count==27440||count==38880||count==40320||count==41760)
+   {
+    count=0;
+    Apower=0;
+    Power1H=0;Power2H=0;Power3H=0;Power4H=0;Power5H=0;Power6H=0;Power7H=0;Power8H=0;Power9H=0;Power10H=0;
+    Power11H=0;Power12H=0;Power13H=0;Power14H=0;Power15H=0;Power16H=0;Power17H=0;Power18H=0;Power19H=0;Power20H=0;
+    Power21H=0;Power22H=0;Power23H=0;Power24H=0;
+    
+   }
+   
+   if( !isnan(UPower24H) ){
+     ThingSpeak.writeField(Channel_ID,2,TotalU,myWriteAPIKey);
+     Bill();  
+    }
+  }
+
+void Catagory1()
+  { 
+    if (input <50)
+    {
+      output = input*1.45;
+      Final_output= output +25;
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+      }
+    if (input <100 && input >50 )
+    {
+      input -= 50;
+      temp1 = 50*1.45;
+      temp2 = input*2.6;
+      output = temp1+temp2;
+      Final_output = output+DC_CATA+FC_CATA;
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+              
+    }
+  }
+  
+  
+  void Catagory2()
+  {
+    if (input >100 && input <200)
+    {
+    input -= 100;
+    temp1 = 100*3.3;
+    temp2 = input*4.3;
+    output = temp1+temp2;
+    Final_output = output+DC_CATB+FC_CATB;
+    
+    ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+
+    }
+  }
+  
+  void Category(){
+    
+    if ( input >200 && input<300)
+    {
+      input -= 200;
+      temp1 = 200*5;
+      temp2 = input*7.2;
+      output = temp1+temp2;
+      Final_output = output+DC_CATC+FC_CATC;
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+
+    }
+    
+    if (input >300 && input <400 )
+    {
+      input -= 300;
+      temp1 = 200*5;
+      temp2 = 100*7.2;
+      temp3 = input*8.5;
+      output = temp3+temp2+temp1;
+      Final_output = output + DC_CATC + FC_CATC;         
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+
+    }
+    
+    if (input >400 && input <800)
+    {
+       input -= 400;
+       temp1 = 200 * 5;
+       temp2 = 100 * 7.2;
+       temp3 = 100 * 8.5;
+       temp4 = input * 9;
+       output = temp1+temp2+temp3+temp4;
+       Final_output = output + DC_CATC + FC_CATC;       
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+
+    }
+
+    if (input >800)
+    {
+      input -= 800;
+      temp1 = 200 * 5;
+      temp2 = 100 * 7.2;
+      temp3 = 100 * 8.5;
+      temp4 = 400 * 9;
+      temp5 = input * 9.5;
+      output = temp1+temp2+temp3+temp4+temp5;
+      Final_output = output + DC_CATC + FC_CATC;            
+      ThingSpeak.writeField(Channel_ID,3,Final_output,myWriteAPIKey);
+
+   
+    }
+  }
+void Bill()
+{ 
+  Catagory1();
+  Catagory2();
+  Category();
+}
+//python -m esptool --chip esp8266 erase_flash
