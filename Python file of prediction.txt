@@ -2,6 +2,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+# import pyflux as pf
 import openpyxl
 import statsmodels.api as sm
 import seaborn as sns
@@ -9,12 +10,11 @@ import sys
 import warnings
 from pandas import Series
 
-# Step 1 make the data frame
+#Step 1 make the data frame
 Data = pd.read_excel(r"C:\Users\Indra\OneDrive\Desktop\DATA.xlsx")
-X = Data.entry_id
-Y = Data.field1
-
-# step to plot the graph
+X=Data.entry_id
+Y=Data.field1
+#step to plot the graph
 def run_sequence_plot(x, y, title, xlabel="time", ylabel="series"):
     plt.plot(x, y, 'k-')
     plt.title(title)
@@ -22,27 +22,28 @@ def run_sequence_plot(x, y, title, xlabel="time", ylabel="series"):
     plt.ylabel(ylabel)
     plt.grid(alpha=0.3)
     plt.show()
-
-run_sequence_plot(X, Y, title="Graph")
-
-# checking stationary
+run_sequence_plot(X, Y,title="Graph")
+#checking stationary
 # ADF Test
-# Function to print out results in customized manner
+# Function to print out results in customised manner
 from statsmodels.tsa.stattools import adfuller
-
+count=0
 def adf_test(timeseries):
-    print('Results of Dickey-Fuller Test:')
+    print ('Results of Dickey-Fuller Test:')
     Datatest = adfuller(timeseries, autolag='AIC')
-    Dataoutput = pd.Series(Datatest[0:4], index=['Test Statistic', 'p-value', '#Lags Used', 'Number of Observations Used'])
-    for key, value in Datatest[4].items():
-        Dataoutput['Critical Value (%s)' % key] = value
-    print(Dataoutput)
+    Dataoutput = pd.Series(Datatest[0:4], index=['Test Statistic','p-value','#Lags Used','Number of Observations Used'])
+
+    for key,value in Datatest[4].items():
+        Dataoutput['Critical Value (%s)'%key] = value
+    print (Dataoutput)
+
 
 # Call the function and run the test
 print(Data['field1'])
 adf_test(Data['field1'])
 
-# Differencing
+#Differencing
+
 def difference(dataset, interval=1):
     diff = list()
     for i in range(interval, len(dataset)):
@@ -50,64 +51,96 @@ def difference(dataset, interval=1):
         diff.append(value)
     return Series(diff)
 
-diff = difference(Y)
+diff=difference(Y)
 # we can also use the diff function in the pandas to find the difference in time series
-Diff_data = Y.diff()
-x = [i for i in range(1, 1922)]
-plt.plot(x, Diff_data.dropna())
+Diff_data=Y.diff()
+x=[i for i in range(1,1922)]
+plt.plot(x,Diff_data.dropna())
 plt.show()
-plt.plot(x, diff)
+plt.plot(x,diff)
 plt.show()
 diff.hist()
 plt.show()
 Diff_data.hist()
 plt.show()
-
-# Adf test to that differentiated series
+#print(diff)
+#print(Diff_data)
+#plt.plot(X,difference)
+#plt.show()
+#Adf test to that differentiated series
 adf_test(diff)
 adf_test(Diff_data.dropna())
 
-# now finding the p,q values for ARIMA
+#now finding the p,q values for ARIMA
 
 # PACF plot of 1st differenced series
-sm.graphics.tsa.plot_pacf(diff.dropna(), method="ywm")
+sm.graphics.tsa.plot_pacf(diff.dropna(),method="ywm")
 plt.show()
-
-# ACF plot of 1st differencing
+#ACF plot of  1st differencing
 sm.graphics.tsa.plot_acf(diff.dropna())
 plt.show()
 
-# building ARIMA MODULE
-from statsmodels.tsa.arima.model import ARIMA
 
-model = ARIMA(Y, order=(0, 1, 1))
+#building ARIMA MODULE
+from statsmodels.tsa.arima.model import  ARIMA
+model = ARIMA(Y, order=(0,1,1))
 model_fit = model.fit()
 print(model_fit.summary())
-
-# The table in the middle is the coefficients table where the values under ‘coef’ are the weights of the respective terms.
-# plot the residuals to ensure there are no patterns (that is, look for constant mean and variance).
+#The table in the middle is the coefficients table where the values under ‘coef’ are the weights of the respective terms.
+#plot the residuals to ensure there are no patterns (that is, look for constant mean and variance).
 residuals = pd.DataFrame(model_fit.resid)
-fig, ax = plt.subplots(1, 2)
+fig, ax = plt.subplots(1,2)
 residuals.plot(title="Residuals", ax=ax[0])
 residuals.plot(kind='kde', title='Density', ax=ax[1])
 plt.show()
-
-# plot the actuals against the fitted values using plot_predict().
-a = model_fit.get_prediction(dynamic=False)
+#plot the actuals against the fitted values using plot_predict().
+a=model_fit.get_prediction(dynamic=False)
 model_fit.plot_diagnostics()
+#plt.show()
+# dynamic is False, then the in-sample lagged values are used for prediction
+train=Y[:1000]
+test=Y[1000:]
+
+# Build Model
+model = ARIMA(train, order=(3,2,1))
+# model = ARIMA(train, order=(1, 1, 1))
+fitted = model.fit()
+
+# Forecast
+fc, se, conf = fitted.forecast(3, alpha=0.05)  # 95% conf
+
+# Make as pandas series
+fc_series = pd.Series(fc, index=test.index)
+#lower_series = pd.Series(conf[:, 0], index=test.index)
+#upper_series = pd.Series(conf[:, 1], index=test.index)
+
+# Plot
+plt.figure(figsize=(12,12), dpi=100)
+plt.plot(train, label='training')
+plt.plot(test, label='actual')
+plt.plot(fc_series, label='forecast')
+#plt.fill_between(lower_series.index, lower_series, upper_series,color='k', alpha=.15)
+plt.title('Forecast vs Actuals')
+plt.legend(loc='upper left', fontsize=8)
 plt.show()
 
-# dynamic is False, then the in-sample lagged values are used
-a_predicted = a.predicted_mean
-mse = ((a_predicted - Y) ** 2).mean()
-print("Mean Squared Error (MSE): ", mse)
+# Forecast
+n_periods = 24
+fc, confint = model.predict(n_periods=n_periods, return_conf_int=True,params=Y)
+index_of_fc = np.arange(len(Y), len(Y)+n_periods)
 
-# plot the actuals against the predicted values
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(X, Y, label='Actual')
-ax.plot(X, a_predicted, label='Predicted', color='red')
-ax.set_title('Actual vs. Predicted Values')
-ax.set_xlabel('Time')
-ax.set_ylabel('Series')
-ax.legend()
+# make series for plotting purpose
+fc_series = pd.Series(fc, index=index_of_fc)
+lower_series = pd.Series(confint[:, 0], index=index_of_fc)
+upper_series = pd.Series(confint[:, 1], index=index_of_fc)
+
+# Plot
+plt.plot(Y)
+plt.plot(fc_series, color='darkgreen')
+plt.fill_between(lower_series.index,
+                 lower_series,
+                 upper_series,
+                 color='k', alpha=.15)
+
+plt.title("Final Forecast of daily Usage")
 plt.show()
