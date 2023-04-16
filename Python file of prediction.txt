@@ -1,0 +1,113 @@
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import openpyxl
+import statsmodels.api as sm
+import seaborn as sns
+import sys
+import warnings
+from pandas import Series
+
+# Step 1 make the data frame
+Data = pd.read_excel(r"C:\Users\Indra\OneDrive\Desktop\DATA.xlsx")
+X = Data.entry_id
+Y = Data.field1
+
+# step to plot the graph
+def run_sequence_plot(x, y, title, xlabel="time", ylabel="series"):
+    plt.plot(x, y, 'k-')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid(alpha=0.3)
+    plt.show()
+
+run_sequence_plot(X, Y, title="Graph")
+
+# checking stationary
+# ADF Test
+# Function to print out results in customized manner
+from statsmodels.tsa.stattools import adfuller
+
+def adf_test(timeseries):
+    print('Results of Dickey-Fuller Test:')
+    Datatest = adfuller(timeseries, autolag='AIC')
+    Dataoutput = pd.Series(Datatest[0:4], index=['Test Statistic', 'p-value', '#Lags Used', 'Number of Observations Used'])
+    for key, value in Datatest[4].items():
+        Dataoutput['Critical Value (%s)' % key] = value
+    print(Dataoutput)
+
+# Call the function and run the test
+print(Data['field1'])
+adf_test(Data['field1'])
+
+# Differencing
+def difference(dataset, interval=1):
+    diff = list()
+    for i in range(interval, len(dataset)):
+        value = dataset[i] - dataset[i - interval]
+        diff.append(value)
+    return Series(diff)
+
+diff = difference(Y)
+# we can also use the diff function in the pandas to find the difference in time series
+Diff_data = Y.diff()
+x = [i for i in range(1, 1922)]
+plt.plot(x, Diff_data.dropna())
+plt.show()
+plt.plot(x, diff)
+plt.show()
+diff.hist()
+plt.show()
+Diff_data.hist()
+plt.show()
+
+# Adf test to that differentiated series
+adf_test(diff)
+adf_test(Diff_data.dropna())
+
+# now finding the p,q values for ARIMA
+
+# PACF plot of 1st differenced series
+sm.graphics.tsa.plot_pacf(diff.dropna(), method="ywm")
+plt.show()
+
+# ACF plot of 1st differencing
+sm.graphics.tsa.plot_acf(diff.dropna())
+plt.show()
+
+# building ARIMA MODULE
+from statsmodels.tsa.arima.model import ARIMA
+
+model = ARIMA(Y, order=(0, 1, 1))
+model_fit = model.fit()
+print(model_fit.summary())
+
+# The table in the middle is the coefficients table where the values under ‘coef’ are the weights of the respective terms.
+# plot the residuals to ensure there are no patterns (that is, look for constant mean and variance).
+residuals = pd.DataFrame(model_fit.resid)
+fig, ax = plt.subplots(1, 2)
+residuals.plot(title="Residuals", ax=ax[0])
+residuals.plot(kind='kde', title='Density', ax=ax[1])
+plt.show()
+
+# plot the actuals against the fitted values using plot_predict().
+a = model_fit.get_prediction(dynamic=False)
+model_fit.plot_diagnostics()
+plt.show()
+
+# dynamic is False, then the in-sample lagged values are used
+a_predicted = a.predicted_mean
+mse = ((a_predicted - Y) ** 2).mean()
+print("Mean Squared Error (MSE): ", mse)
+
+# plot the actuals against the predicted values
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(X, Y, label='Actual')
+ax.plot(X, a_predicted, label='Predicted', color='red')
+ax.set_title('Actual vs. Predicted Values')
+ax.set_xlabel('Time')
+ax.set_ylabel('Series')
+ax.legend()
+plt.show()

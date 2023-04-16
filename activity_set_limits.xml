@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        tools:context=".LimitsActivity">
+
+        <TextView
+            android:id="@+id/tvLimitValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/set_limit_value"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/etLimitValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvLimitValue"
+            android:inputType="number"
+            android:hint="@string/enter_limit_value"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:autofillHints="" />
+
+        <Button
+            android:id="@+id/btnSaveLimits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/etLimitValue"
+            android:text="@string/save_limits"
+            android:layout_marginTop="16dp" />
+
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
